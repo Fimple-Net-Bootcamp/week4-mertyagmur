@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using VirtualPets.Data;
@@ -13,16 +14,24 @@ namespace VirtualPets.Controllers
     {
         private readonly VirtualPetDbContext context;
         private readonly IMapper mapper;
+        private readonly IValidator<ActivityDTO> activityValidator;
 
-        public ActivityController(VirtualPetDbContext context, IMapper mapper)
+        public ActivityController(VirtualPetDbContext context, IMapper mapper, IValidator<ActivityDTO> activityValidator)
         {
             this.context = context;
             this.mapper = mapper;
+            this.activityValidator = activityValidator;
         }
 
         [HttpPost]
         public IActionResult AddActivity([FromBody] ActivityDTO activityDTO)
         {
+            var validationResult = activityValidator.Validate(activityDTO);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            }
+
             var activity = mapper.Map<Activity>(activityDTO);
 
             context.Activities.Add(activity);

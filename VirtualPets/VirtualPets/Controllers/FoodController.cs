@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using VirtualPets.Data;
@@ -13,11 +14,13 @@ namespace VirtualPets.Controllers
     {
         private readonly VirtualPetDbContext context;
         private readonly IMapper mapper;
+        private readonly IValidator<FoodDTO> foodValidator;
 
-        public FoodController(VirtualPetDbContext context, IMapper mapper)
+        public FoodController(VirtualPetDbContext context, IMapper mapper, IValidator<FoodDTO> foodValidator)
         {
             this.context = context;
             this.mapper = mapper;
+            this.foodValidator = foodValidator;
         }
 
         [HttpGet]
@@ -33,6 +36,12 @@ namespace VirtualPets.Controllers
         [HttpPost("{petId}")]
         public IActionResult GiveFoodToPet(int petId, [FromBody] FoodDTO foodDTO)
         {
+            var validationResult = foodValidator.Validate(foodDTO);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            }
+
             var pet = context.Pets.Find(petId);
             if (pet == null)
             {
