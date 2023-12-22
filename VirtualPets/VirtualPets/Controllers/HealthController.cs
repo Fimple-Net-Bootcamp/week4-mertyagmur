@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using VirtualPets.Data;
+using VirtualPets.DTOs;
 using VirtualPets.Models;
 
 namespace VirtualPets.Controllers
@@ -10,10 +12,12 @@ namespace VirtualPets.Controllers
     public class HealthController : ControllerBase
     {
         private readonly VirtualPetDbContext context;
+        private readonly IMapper mapper;
 
-        public HealthController(VirtualPetDbContext context)
+        public HealthController(VirtualPetDbContext context, IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
         }
 
         [HttpGet("{petId}")]
@@ -31,11 +35,13 @@ namespace VirtualPets.Controllers
                 return NotFound("Health information not found");
             }
 
-            return Ok(health);
+            var healthDTO = mapper.Map<HealthDTO>(health);
+
+            return Ok(healthDTO);
         }
 
         [HttpPatch("{petId}")]
-        public IActionResult UpdatePetHealth(int petId, [FromBody] Health updatedHealth)
+        public IActionResult UpdatePetHealth(int petId, [FromBody] HealthDTO updatedHealthDTO)
         {
             var pet = context.Pets.Find(petId);
             if (pet == null)
@@ -49,13 +55,13 @@ namespace VirtualPets.Controllers
                 return NotFound("Health information not found");
             }
 
-            health.Hunger = updatedHealth.Hunger;
-            health.Happiness = updatedHealth.Happiness;
-            health.Cleanliness = updatedHealth.Cleanliness;
+            mapper.Map(updatedHealthDTO, health);
 
             context.SaveChanges();
 
-            return Ok(health);
+            var responseDTO = mapper.Map<HealthDTO>(health);
+
+            return Ok(responseDTO);
         }
     }
 }

@@ -12,7 +12,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 var Configuration = builder.Configuration;
 builder.Services.AddDbContext<VirtualPetDbContext>(options => options.UseNpgsql(Configuration.GetConnectionString("WebApiDatabase")));
-
+builder.Services.AddAutoMapper(typeof(Program));
 
 var app = builder.Build();
 

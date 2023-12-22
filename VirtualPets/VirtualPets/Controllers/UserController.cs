@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VirtualPets.Data;
+using VirtualPets.DTOs;
 using VirtualPets.Models;
 
 namespace VirtualPets.Controllers
@@ -10,18 +12,25 @@ namespace VirtualPets.Controllers
     public class UserController : ControllerBase
     {
         private readonly VirtualPetDbContext context;
+        private readonly IMapper mapper;
 
-        public UserController(VirtualPetDbContext context)
+        public UserController(VirtualPetDbContext context, IMapper mapper)
         {
             this.context = context;
+            this.mapper = mapper;
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] User user)
+        public IActionResult CreateUser([FromBody] UserDTO userDTO)
         {
+            var user = mapper.Map<User>(userDTO);
+
             context.Users.Add(user);
             context.SaveChanges();
-            return CreatedAtAction(nameof(GetUser), new { userId = user.Id }, user);
+
+            var responseDTO = mapper.Map<UserDTO>(user);
+
+            return CreatedAtAction(nameof(GetUser), new { userId = user.Id }, responseDTO);
         }
 
         [HttpGet("{userId}")]
@@ -32,7 +41,9 @@ namespace VirtualPets.Controllers
             {
                 return NotFound();
             }
-            return Ok(user);
+            var userDTO = mapper.Map<UserDTO>(user);
+
+            return Ok(userDTO);
         }
     }
 }
